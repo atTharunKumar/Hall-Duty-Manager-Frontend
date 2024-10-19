@@ -1,0 +1,65 @@
+.staff-management {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: auto;
+}
+
+.staff-management h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.staff-management table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.staff-management th, .staff-management td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.staff-management th {
+  background-color: #007bff;
+  color: white;
+}
+
+.staff-management tr:hover {
+  background-color: #f1f1f1;
+}
+
+.staff-management input, .staff-management select, .staff-management button {
+  margin: 10px 0;
+}
+
+.staff-management input[type="text"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 94%;
+}
+
+.staff-management select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.staff-management button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.staff-management button:hover {
+  background-color: #138496;
+}

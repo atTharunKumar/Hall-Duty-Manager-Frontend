@@ -1,0 +1,25 @@
+footer {
+  background-color: #5e6165;
+  color: white;
+  padding: 10px;
+  text-align: right;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 115px ;
+  
+}
+
+footer p {
+  margin: 0;
+}
+
+footer a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
