@@ -12,7 +12,9 @@ import SessionStrengthInput from './components/SessionStrengthInput';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SeatingArrangement from './components/SeatingArrangement';
-import StudentsPage from './components/StudentsPage'; // Import the StudentsPage component
+import StudentsPage from './components/StudentsPage';
+import MergedComponent from './components/MergedTable';
+ // Import the StudentsPage component
 
 const App = () => {
   const [cycleDays, setCycleDays] = useState(6);
@@ -54,6 +56,7 @@ const App = () => {
           />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/mergedTable" element={<MergedComponent />} />
           <Route
             path="/session-strength-input"
             element={

@@ -1,24 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import './SeatingArrangement.css';
 
 const SeatingArrangement = () => {
     const [halls, setHalls] = useState([]);
     const [students, setStudents] = useState([]);
     const [seatingGrids, setSeatingGrids] = useState({});
-
+    const [commonCourseGroups, setCommonCourseGroups] = useState([]);
+ 
     useEffect(() => {
         const fetchHallsAndStudents = async () => {
             try {
                 const hallResponse = await axios.get('http://localhost:5000/api/halls');
                 const studentResponse = await axios.get('http://localhost:5000/api/students');
 
-                setHalls(hallResponse.data);
-                setStudents(studentResponse.data);
+                // Load saved common course groups from local storage
+                const savedGroups = JSON.parse(localStorage.getItem("commonCourseGroups")) || [];
+                setCommonCourseGroups(savedGroups);
 
-                const grids = generateSeatingArrangement(hallResponse.data, studentResponse.data);
+                // Normalize student subject codes based on common course groups
+                const updatedStudents = studentResponse.data.map(student => {
+                    for (let i = 0; i < savedGroups.length; i++) {
+                        if (savedGroups[i].includes(student.subject_code)) {
+                            return { ...student, subject_code: `GROUP_${i + 1}` }; // Assign GROUP_1, GROUP_2, etc.
+                        }
+                    }
+                    return student; // Keep original subject code if not grouped
+                });
+
+                setHalls(hallResponse.data);
+                setStudents(updatedStudents);
+
+                const grids = generateSeatingArrangement(hallResponse.data, updatedStudents);
                 setSeatingGrids(grids);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -38,17 +51,11 @@ const SeatingArrangement = () => {
 
         let studentIndices = Array(subjectCodesToUse.length).fill(0);
         let subjectCodeUsage = new Set(subjectCodesToUse);
-
         const assignedStudents = new Set();
 
         const canPlaceStudent = (grid, row, col, student) => {
             const subjectCode = student.subject_code;
-
-            const adjacentOffsets = [
-                [-1, 0], [1, 0],  // Vertical
-                [0, -1], [0, 1],  // Horizontal
-                [-1, -1], [-1, 1], [1, -1], [1, 1]  // Diagonal
-            ];
+            const adjacentOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
 
             for (const [rowOffset, colOffset] of adjacentOffsets) {
                 const newRow = row + rowOffset;
@@ -63,7 +70,6 @@ const SeatingArrangement = () => {
                     return false;
                 }
             }
-
             return true;
         };
 
@@ -89,7 +95,7 @@ const SeatingArrangement = () => {
         for (const hall of halls) {
             const { ROW_S, COL_s } = hall;
             const grid = Array.from({ length: ROW_S }, () => Array(COL_s).fill(null));
-            let remainingStudents = students.slice(); // A copy of all students to track those not yet placed
+            let remainingStudents = students.slice();
 
             while (remainingStudents.length > 0) {
                 let placedAny = false;
@@ -97,7 +103,6 @@ const SeatingArrangement = () => {
                 for (let row = 0; row < ROW_S; row++) {
                     for (let col = 0; col < COL_s; col++) {
                         if (grid[row][col] === null) {
-                            // Try to place a student
                             let placed = false;
 
                             for (let codeIndex = 0; codeIndex < subjectCodesToUse.length; codeIndex++) {
@@ -109,89 +114,31 @@ const SeatingArrangement = () => {
 
                                     if (!assignedStudents.has(student.registration_number) && canPlaceStudent(grid, row, col, student)) {
                                         grid[row][col] = student;
-                                        assignedStudents.add(student.registration_number);  // Mark the student as assigned
+                                        assignedStudents.add(student.registration_number);
                                         studentIndices[codeIndex]++;
                                         placed = true;
                                         placedAny = true;
-                                        break; // Exit the subject code loop as we've placed a student
+                                        break;
                                     }
                                 }
                             }
 
                             if (placed) {
-                                // Check if we need to replace an exhausted subject code
                                 replaceExhaustedSubjectCode();
                             }
                         }
                     }
                 }
 
-                if (!placedAny) {
-                    break; // Exit if no more students can be placed
-                }
-
-                // Update remaining students list
+                if (!placedAny) break;
                 remainingStudents = students.filter(student => !assignedStudents.has(student.registration_number));
             }
 
-            grids[hall.id] = grid;  // Store the grid for the current hall
+            grids[hall.id] = grid;
         }
 
         return grids;
     };
-
-    const downloadPDF = (hall) => {
-        const doc = new jsPDF('landscape', 'mm', 'a4');
-        const grid = seatingGrids[hall.id];
-    
-        // Define the table headers
-        const headers = [
-            ['Row/Col', ...Array.from({ length: hall.COL_s }, (_, i) => `Column ${i + 1}`)]
-        ];
-    
-        // Define the table rows (A1, A2, B1, etc.)
-        const rows = [];
-        grid.forEach((row, rowIndex) => {
-            const rowHeader = String.fromCharCode(65 + rowIndex);  // A, B, C, etc.
-            const seatingRow = row.map((_, colIndex) => `${rowHeader}${colIndex + 1}`);
-            rows.push([rowHeader, ...seatingRow]);  // First row for seat positions
-    
-            const studentRow = row.map(student => student ? student.registration_number : '');
-            rows.push(['', ...studentRow]);  // Second row for student registration numbers
-        });
-    
-        // Add the title and seating table to the PDF
-        doc.text(`${hall.name} - Seating Arrangement`, 14, 16);  // Add title
-    
-        doc.autoTable({
-            startY: 20,
-            head: headers,
-            body: rows,
-            styles: {
-                halign: 'center',  // Horizontal align content to center
-                valign: 'middle',  // Vertical align content to middle
-                fontSize: 8,       // Adjust the font size to fit A4 size
-                cellPadding: 2,
-                overflow: 'linebreak',  // Prevent content from wrapping or overflowing
-            },
-            columnStyles: {
-                0: { cellWidth: 20 },  // Row header width
-                1: { cellWidth: 25 },  // Column width for seat numbers and student registration numbers
-                // Adjust other column widths as necessary to ensure consistent cell size
-            },
-            bodyStyles: {
-                fontSize: 7,   // Reduce the font size for the registration numbers
-            },
-            tableWidth: 'auto',   // Set table width to automatically adjust
-            theme: 'grid',        // Choose the table theme
-            margin: { horizontal: 10 },  // Add margins for better fit
-        });
-    
-        // Save the generated PDF
-        doc.save(`${hall.name}-seating-arrangement.pdf`);
-    };
-    
-
 
     return (
         <div>
@@ -233,7 +180,6 @@ const SeatingArrangement = () => {
                             ))}
                         </tbody>
                     </table>
-                    <button onClick={() => downloadPDF(hall)}>Download {hall.name} PDF</button>
                 </div>
             ))}
         </div>

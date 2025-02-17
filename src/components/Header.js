@@ -17,6 +17,7 @@ const Header = () => {
         <Link to="/SeatingArrangement">SeatingArrangement</Link>
         <Link to="/reports">Reports</Link>
         <Link to="/settings">Settings</Link>
+        <Link to="/mergedTable">SessionDetails</Link>
       </nav>
     </header>
   );
