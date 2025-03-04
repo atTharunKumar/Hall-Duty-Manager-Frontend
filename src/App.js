@@ -14,9 +14,9 @@ import Footer from './components/Footer';
 import SeatingArrangement from './components/SeatingArrangement';
 import StudentsPage from './components/StudentsPage';
 import MergedComponent from './components/MergedTable';
- // Import the StudentsPage component
 
 const App = () => {
+  // Existing state for session strengths
   const [cycleDays, setCycleDays] = useState(6);
   const [sessionStrengths, setSessionStrengths] = useState(
     Array.from({ length: cycleDays }, (_, i) => ({
@@ -26,8 +26,11 @@ const App = () => {
     }))
   );
 
+  // New state for students data
+  const [students, setStudents] = useState([]);
+
   useEffect(() => {
-    // Fetch initial session strengths from the server
+    // Fetch session strengths from the server
     axios.get('http://localhost:5000/api/session-strengths')
       .then(response => {
         const fetchedStrengths = response.data;
@@ -40,6 +43,15 @@ const App = () => {
         setCycleDays(formattedStrengths.length);
       })
       .catch(error => console.error('Error fetching session strengths:', error));
+  }, []);
+
+  useEffect(() => {
+    // Fetch student data once
+    axios.get("http://localhost:5000/api/students")
+      .then(response => {
+         setStudents(response.data);
+      })
+      .catch(error => console.error("Error fetching student data:", error));
   }, []);
 
   return (
@@ -68,15 +80,15 @@ const App = () => {
               />
             }
           />
+          {/* Pass the student data to SeatingArrangement */}
           <Route
             path="/SeatingArrangement"
-            element={
-              <SeatingArrangement rows={4} cols={4} /> // Ensure correct props are passed if needed
-            }
+            element={<SeatingArrangement students={students} />}
           />
+          {/* Pass the student data and updater to StudentsPage */}
           <Route
             path="/students"
-            element={<StudentsPage />} // Add the route for StudentsPage
+            element={<StudentsPage students={students} setStudents={setStudents} />}
           />
         </Routes>
       </main>

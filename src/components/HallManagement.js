@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './HallManagement.css';  // Import the CSS file
+import * as XLSX from 'xlsx';
+import './HallManagement.css';
 
 const HallManagement = () => {
   const [halls, setHalls] = useState([]);
   const [newHall, setNewHall] = useState({ name: '', ROW_S: '', COL_s: '' });
-  const [editHallId, setEditHallId] = useState(null); // Store the ID of the hall being edited
-  const [editData, setEditData] = useState({ name: '', ROW_S: '', COL_s: '' }); // Store edited hall data
+  const [editHallId, setEditHallId] = useState(null);
+  const [editData, setEditData] = useState({ name: '', ROW_S: '', COL_s: '' });
+  const [uploadFile, setUploadFile] = useState(null);
 
   useEffect(() => {
     fetchHalls();
@@ -37,6 +39,7 @@ const HallManagement = () => {
 
     try {
       const response = await axios.post('http://localhost:5000/api/halls', hallData);
+      // Here, we are appending the new hall rather than replacing all.
       setHalls([...halls, response.data]);
       setNewHall({ name: '', ROW_S: '', COL_s: '' });
     } catch (error) {
@@ -65,10 +68,11 @@ const HallManagement = () => {
       setHalls(halls.map(hall =>
         hall.id === editHallId ? response.data : hall
       ));
-      setEditHallId(null);  // Exit edit mode
+      setEditHallId(null);
     } catch (error) {
       console.error('Error updating hall:', error);
     }
+    localStorage.setItem("storedseating", JSON.stringify({}));
   };
 
   const handleEditClick = (hall) => {
@@ -76,9 +80,47 @@ const HallManagement = () => {
     setEditData({ name: hall.name, ROW_S: hall.ROW_S, COL_s: hall.COL_s });
   };
 
+  // Handle file input change
+  const handleFileChange = (e) => {
+    setUploadFile(e.target.files[0]);
+  };
+
+  // Process file upload using the new endpoint that replaces hall data
+  const handleFileUpload = async () => {
+    if (!uploadFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/halls/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      alert(response.data.message);
+      // After a successful upload, re-fetch halls to see the new data
+      fetchHalls();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert("Failed to upload file.");
+    }
+  };
+
   return (
     <div className="hall-management">
       <h2>Hall Management</h2>
+
+      {/* File Upload Section at the Top */}
+      <div className="upload-section">
+        <h3>Upload Hall Data (XLSX/CSV)</h3>
+        <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileChange} />
+        <button onClick={handleFileUpload}>Upload File</button>
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -94,7 +136,6 @@ const HallManagement = () => {
             <tr key={hall.id}>
               {editHallId === hall.id ? (
                 <>
-                  {/* Render input fields if the hall is in edit mode */}
                   <td>
                     <input
                       type="text"
@@ -124,7 +165,6 @@ const HallManagement = () => {
                 </>
               ) : (
                 <>
-                  {/* Render hall data in normal mode */}
                   <td>{hall.name}</td>
                   <td>{hall.ROW_S}</td>
                   <td>{hall.COL_s}</td>

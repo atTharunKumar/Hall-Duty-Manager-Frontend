@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './StaffManagement.css'; // Import the CSS file
+import './StaffManagement.css';
 
 const StaffManagement = () => {
   const [staff, setStaff] = useState([]);
   const [newStaff, setNewStaff] = useState({ id: '', name: '', type: '', designation: '' });
-  const [editStaffId, setEditStaffId] = useState(null); // To track the editing staff ID
+  const [editStaffId, setEditStaffId] = useState(null);
   const [updatedStaff, setUpdatedStaff] = useState({ id: '', name: '', type: '', designation: '' });
+  const [file, setFile] = useState(null); // State to store the uploaded file
 
   useEffect(() => {
     axios
@@ -30,21 +31,63 @@ const StaffManagement = () => {
       alert('Please select a level.');
       return;
     }
-
-    console.log(updatedStaff)
     axios
       .put(`http://localhost:5000/api/staff/${id}`, updatedStaff)
       .then((response) => {
         setStaff(staff.map((s) => (s.id === id ? response.data : s)));
         setEditStaffId(null);
-        console.log(response)
       })
       .catch((error) => console.error('Error updating staff:', error));
   };
 
-  const handleEditClick = (staff) => {
-    setEditStaffId(staff.id);
-    setUpdatedStaff({ id: staff.id, name: staff.name, type: staff.type, designation: staff.designation });
+  const handleEditClick = (staffMember) => {
+    setEditStaffId(staffMember.id);
+    setUpdatedStaff({
+      id: staffMember.id,
+      name: staffMember.name,
+      type: staffMember.type,
+      designation: staffMember.designation,
+    });
+  };
+
+  // Handler for file selection with logging to ensure the file is captured
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    console.log('Selected file:', selectedFile);
+    setFile(selectedFile);
+  };
+
+  // Handler for file upload with FormData logging
+  const handleFileUpload = () => {
+    if (!file) {
+      alert('Please select a file to upload.');
+      return;
+    }
+    // Create FormData and append file with key "staffFile" (ensure backend expects this key)
+    const formData = new FormData();
+    formData.append('staffFile', file);
+
+    // Log FormData entries for debugging
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + (pair[1] && pair[1].name ? pair[1].name : pair[1]));
+    }
+
+    axios
+      .post('http://localhost:5000/api/staff/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      .then((response) => {
+        // Assuming backend returns updated staff data
+        setStaff(response.data);
+        setFile(null);
+        alert('File uploaded and staff data updated successfully!');
+      })
+      .catch((error) => {
+        console.error('Error uploading file:', error);
+        alert('Error uploading file. Please check the console for more details.');
+      });
   };
 
   return (
@@ -93,7 +136,9 @@ const StaffManagement = () => {
                   <td>
                     <select
                       value={updatedStaff.designation}
-                      onChange={(e) => setUpdatedStaff({ ...updatedStaff, designation: e.target.value })}
+                      onChange={(e) =>
+                        setUpdatedStaff({ ...updatedStaff, designation: e.target.value })
+                      }
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -114,7 +159,7 @@ const StaffManagement = () => {
                     <button onClick={() => handleEditClick(s)}>Edit</button>
                   </td>
                 </>
-              )}  
+              )}
             </tr>
           ))}
         </tbody>
@@ -154,6 +199,10 @@ const StaffManagement = () => {
         <option value="Inactive">Inactive</option>
       </select>
       <button onClick={addStaff}>Add Staff</button>
+
+      <h3>Upload Staff Data File</h3>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleFileUpload}>Upload File</button>
     </div>
   );
 };

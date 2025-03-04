@@ -24,6 +24,7 @@ const MergedComponent = () => {
                     setFilteredStudents(response.data);
                 })
                 .catch(error => console.error('Error fetching student data:', error));
+                
         }
     }, []);
 
