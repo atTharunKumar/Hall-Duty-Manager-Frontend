@@ -18,6 +18,9 @@ const Header = () => {
         <Link to="/reports">Reports</Link>
         <Link to="/settings">Settings</Link>
         <Link to="/mergedTable">SessionDetails</Link>
+        <Link to="/SlotBooking">SlotBookingpage</Link>
+        <Link to="/AllotSlots">AllotSlotspage</Link>
+        <Link to="/BookingList">Booking</Link>
       </nav>
     </header>
   );
