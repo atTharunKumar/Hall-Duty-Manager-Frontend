@@ -2,6 +2,23 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./BookingList.css";
 
+// Format time (e.g., "10:00:00" -> "10:00 AM")
+const formatTime = (timeStr) => {
+  if (!timeStr || typeof timeStr !== "string") return "N/A";
+  const [hours, minutes] = timeStr.split(":");
+  if (!hours || !minutes) return "N/A";
+  const date = new Date();
+  date.setHours(+hours, +minutes);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// Format date (e.g., "2024-04-30" -> "04/30/2024")
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return !isNaN(date) ? date.toLocaleDateString() : "N/A";
+};
+
 const BookingList = () => {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
@@ -12,7 +29,7 @@ const BookingList = () => {
     axios
       .get("http://localhost:5000/api/bookings")
       .then((response) => {
-        console.log("Fetched bookings:", response.data);
+        console.log("Raw data from backend:", response.data);
         setBookings(response.data);
         setFilteredBookings(response.data);
       })
@@ -59,12 +76,11 @@ const BookingList = () => {
             {filteredBookings.map((booking) => {
               const userName = booking.user?.name || "N/A";
               const userEmail = booking.user?.email || "N/A";
-              const courseDetails =
-                booking.slot?.courseDetails ||
-                booking.courseDetails ||
-                "N/A";
-              const dateFrom =
-                booking.slot?.date_from || booking.date_from || "N/A";
+
+              // Format the slot's date and time
+              const dateFrom = formatDate(booking.slot?.date_from);
+              const startTime = formatTime(booking.slot?.start_time);
+              const endTime = formatTime(booking.slot?.end_time);
               const bookedAt = booking.bookedAt
                 ? new Date(booking.bookedAt).toLocaleString()
                 : "N/A";
@@ -73,7 +89,7 @@ const BookingList = () => {
                 <tr key={booking.id || booking.bookingId}>
                   <td>{userName}</td>
                   <td>{userEmail}</td>
-                  <td>{courseDetails} on {dateFrom}</td>
+                  <td>{`${dateFrom} from ${startTime} to ${endTime}`}</td>
                   <td>{bookedAt}</td>
                 </tr>
               );

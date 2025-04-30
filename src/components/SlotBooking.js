@@ -8,7 +8,6 @@ const SlotBooking = ({ setBookedSlots }) => {
   const [bookedSlot, setBookedSlot] = useState(null);
   const [error, setError] = useState(null);
 
-  // Fetch available slots from backend when component mounts
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/slots")
@@ -21,7 +20,6 @@ const SlotBooking = ({ setBookedSlots }) => {
       });
   }, []);
 
-  // Helper to format time (e.g., "13:30" -> "01:30 pm")
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
     const [hour, minute] = timeStr.split(":");
@@ -31,46 +29,48 @@ const SlotBooking = ({ setBookedSlots }) => {
     return `${hour12.toString().padStart(2, "0")}:${minute} ${ampm}`;
   };
 
+  const getSession = (startTime) => {
+    const hour = parseInt(startTime.split(":")[0], 10);
+    return hour < 12 ? "FN" : "AN";
+  };
+
   const handleBookSlot = async (e) => {
     e.preventDefault();
     if (!selectedSlotId) return;
-
-    // Dummy user info; in a real app, get this from your auth or user context
-    const userInfo = { name: "John Doe", email: "john@example.com" };
-
+  
+    const userInfo = JSON.parse(localStorage.getItem("user"));
+    if (!userInfo) {
+      setError("User not logged in. Please login first.");
+      return;
+    }
+  
     try {
       const response = await axios.post("http://localhost:5000/api/bookings", {
         slotId: selectedSlotId,
-        user: userInfo,
+        user: {
+          name: userInfo.name,
+          email: userInfo.email,
+        },
       });
-      // Assume response.data returns:
-      // { bookingId, bookedAt, updatedSlot }
-      const { bookingId, bookedAt, updatedSlot } = response.data;
-      // Find the full slot details for display purposes
+  
+      const { bookingId, bookedAt } = response.data;
       const selectedSlot = slots.find(
         (slot) => String(slot.id) === String(selectedSlotId)
       );
-      // Create a normalized booking object
+  
       const newBooking = {
         id: bookingId,
-        user: userInfo,
-        slot: {
-          courseDetails: selectedSlot.courseDetails,
-          date_from: selectedSlot.date_from,
-          start_time: selectedSlot.start_time,
-          end_time: selectedSlot.end_time,
-          venue: selectedSlot.venue,
+        user: {
+          name: userInfo.name,
+          email: userInfo.email,
         },
-        bookedAt: bookedAt,
+        slot: selectedSlot,
+        bookedAt,
       };
-
+  
       setBookedSlot(newBooking);
       if (setBookedSlots) {
-        setBookedSlots((prev) => {
-          const updatedBookings = [...prev, newBooking];
-          console.log("Updated bookedSlots in SlotBooking:", updatedBookings);
-          return updatedBookings;
-        });
+        setBookedSlots((prev) => [...prev, newBooking]);
       }
     } catch (err) {
       console.error("Booking error:", err);
@@ -78,10 +78,15 @@ const SlotBooking = ({ setBookedSlots }) => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    const dateObj = new Date(dateStr);
+    return dateObj.toLocaleDateString(); // Adjusts to local time zone
+  };
+
   if (bookedSlot) {
-    // Display booked slot details in a card format
     const dateObj = new Date(bookedSlot.slot.date_from);
-    const dateString = dateObj.toISOString().split("T")[0];
+    const dateString = dateObj.toLocaleDateString();
+    const session = getSession(bookedSlot.slot.start_time);
     const start = formatTime(bookedSlot.slot.start_time);
     const end = formatTime(bookedSlot.slot.end_time);
 
@@ -93,6 +98,8 @@ const SlotBooking = ({ setBookedSlots }) => {
           <p className="value">{bookedSlot.slot.courseDetails}</p>
           <p className="label">Duty Date</p>
           <p className="value">{dateString}</p>
+          <p className="label">Session</p>
+          <p className="value">{session}</p>
           <p className="label">Duty Timings</p>
           <p className="value">
             {start} to {end}
@@ -119,7 +126,7 @@ const SlotBooking = ({ setBookedSlots }) => {
       ) : (
         <form onSubmit={handleBookSlot} className="slot-booking-form">
           <label htmlFor="slotSelect" className="slot-label">
-            Slot Timings
+            Available Slots
           </label>
           <select
             id="slotSelect"
@@ -130,13 +137,13 @@ const SlotBooking = ({ setBookedSlots }) => {
           >
             <option value="">Select a slot...</option>
             {slots.map((slot) => {
-              const dateObj = new Date(slot.date_from);
-              const dateString = dateObj.toISOString().split("T")[0];
-              const start = formatTime(slot.start_time);
-              const end = formatTime(slot.end_time);
+              const session = getSession(slot.start_time);
+              const date = formatDate(slot.date_from); // Format the date correctly
               return (
                 <option key={slot.id} value={slot.id}>
-                  {`${slot.courseDetails} | ${dateString} (${start} - ${end}) - Available: ${slot.available_slots}`}
+                  {`${date} | ${session} | ${formatTime(slot.start_time)} - ${formatTime(
+                    slot.end_time
+                  )}`}
                 </option>
               );
             })}

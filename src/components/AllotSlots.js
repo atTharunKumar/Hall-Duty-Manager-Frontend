@@ -141,7 +141,7 @@ const AllotSlots = () => {
         <table className="slots-table">
           <thead>
             <tr>
-              <th>User</th>
+              <th>Course Details</th>
               <th>Date</th>
               <th>Time</th>
               <th>Venue</th>

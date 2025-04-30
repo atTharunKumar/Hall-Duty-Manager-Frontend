@@ -5,10 +5,7 @@ import './HomePage.css'; // Import the enhanced CSS file
 const HomePage = () => {
   return (
     <div className="home-page">
-      <header className="header">
-        <h2>Welcome to the Hall Duty Manager</h2>
-        <p>Your one-stop solution for managing halls, staff, schedules, seating arrangements.</p>
-      </header>
+     
 
       <section className="overview">
         <div className="overview-item">
@@ -19,33 +16,33 @@ const HomePage = () => {
           <p>Manage your staff members, including adding, editing, and viewing details.</p>
           </div>
           <div className='hee3'>
-          <Link to="/staff-management" className="btn">Go to Staff Management</Link>
+          <Link to="/staffmanagement" className="btn">Go to Staff Management</Link>
           </div>
         </div>
         <div className="overview-item">
           <div><h2>Hall Management</h2></div>
           <p>Keep track of hall details, including capacity and assignments.</p>
-          <Link to="/hall-management" className="btn">Go to Hall Management</Link>
+          <Link to="/hallmanagement" className="btn">Go to Hall Management</Link>
         </div>
         <div className="overview-item">
           <h2>Session Strength</h2>
           <p>Session strength is the number of students assigned to a specific exam session per day.</p>
-          <Link to="/session-strength-input" className="btn">Go to Session Strength</Link>
+          <Link to="/sessionstrength" className="btn">Go to Session Strength</Link>
         </div>
         <div className="overview-item">
           <h2>Duty Scheduling</h2>
           <p>Generate and view duty schedules for staff across different exam cycles.</p>
-          <Link to="/duty-scheduling" className="btn">Go to Duty Scheduling</Link>
+          <Link to="/dutyscheduling" className="btn">Go to Duty Scheduling</Link>
         </div>
         <div className="overview-item">
           <h2>View Student List</h2>
           <p>View Student List displays students' names, registration numbers, departments and subject code.</p>
-          <Link to="/students" className="btn">Go to Student List</Link>
+          <Link to="/student" className="btn">Go to Student List</Link>
         </div>
         <div className="overview-item">
           <h2>Seating Arrangement</h2>
           <p>Seating Arrangements allocate students to seats based on their subjectcode and exam schedules.</p>
-          <Link to="/SeatingArrangement" className="btn">Go to Seating Arrangement</Link>
+          <Link to="/seating" className="btn">Go to Seating Arrangement</Link>
         </div>
         <div className="overview-item">
           <h2>Reports</h2>

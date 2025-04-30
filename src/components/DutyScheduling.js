@@ -207,32 +207,38 @@ const generateSchedule = () => {
       <h2>Duty Scheduling</h2>
 
       <div>
-        <h3>Set Duty Limits:</h3>
-        {Object.entries(dutiesPerStaff).map(([type, limit]) => (
-          <div key={type}>
-            <label>{type}: </label>
-            <input
-              type="number"
-              value={limit}
-              onChange={(e) => handleDutyLimitChange(type, e.target.value)}
-            />
-          </div>
-        ))}
+  <h3>Set Duty Limits:</h3>
+  <div className="duty-limits">
+    {Object.entries(dutiesPerStaff).map(([type, limit]) => (
+      <div key={type}>
+        <label>{type}: </label>
+        <input
+          type="number"
+          value={limit}
+          onChange={(e) => handleDutyLimitChange(type, e.target.value)}
+        />
       </div>
+    ))}
+  </div>
+</div>
+
 
       <div>
-        <h3>Select Halls:</h3>
-        {halls.map((hall) => (
-          <div key={hall.id}>
-            <input
-              type="checkbox"
-              checked={selectedHalls.includes(hall.id)}
-              onChange={() => handleHallSelection(hall.id)}
-            />
-            <label>{hall.name} (Capacity: {hall.capacity})</label>
-          </div>
-        ))}
+  <h3>Select Halls:</h3>
+  <div className="hall-selection">
+    {halls.map((hall) => (
+      <div key={hall.id}>
+        <input
+          type="checkbox"
+          checked={selectedHalls.includes(hall.id)}
+          onChange={() => handleHallSelection(hall.id)}
+        />
+        <label>{hall.name} (Capacity: {hall.capacity})</label>
       </div>
+    ))}
+  </div>
+</div>
+
 
       <button onClick={generateSchedule}>Generate Schedule</button>
       <button onClick={downloadPDF} disabled={Object.keys(schedule).length === 0}>
