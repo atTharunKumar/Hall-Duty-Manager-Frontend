@@ -230,50 +230,54 @@ const Reports = () => {
   };
 
   // Function to add footer content on each page for the seating report PDF
-  const addFooterContent = (doc, finalY) => {
-    // 1) No. of Absentees
-    doc.text("No. of Absentees :", 40, finalY + 30);
+ const addFooterContent = (doc) => {
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-    // 2) Notes
-    doc.text(
-      "Note 1: Candidates who are Absent must be marked ABSENT in Red ink.",
-      40,
-      finalY + 55
-    );
-    doc.text(
-      "         2. This sheet must be handed over to the Chief Superintendent along with Answer Books.",
-      40,
-      finalY + 70
-    );
+  const startY = pageHeight - 150; // adjust spacing from bottom
 
-    // 3) Small table for S. No | Name | Designation & Department | Signature with Date
-    doc.autoTable({
-      startY: finalY + 80,
-      theme: "grid",
-      headStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        fontStyle: "normal",
-        halign: "center",
-      },
-      bodyStyles: {
-        fontSize: 10,
-        lineWidth: 0.8,
-        halign: "center",
-        textColor: [0, 0, 0],
-      },
-      styles: {
-        font: "helvetica",
-        fontSize: 10,
-        lineColor: [0, 0, 0],
-      },
-      body: [
-        ["S. No", "Name", "Designation & Department", "Signature with Date"],
-        ["", "", "", ""],
-        ["", "", "Chief Superintendent", ""],
-      ],
-    });
-  };
+  // 1) No. of Absentees
+  doc.text("No. of Absentees :", 40, startY);
+
+  // 2) Notes
+  doc.text(
+    "Note 1: Candidates who are Absent must be marked ABSENT in Red ink.",
+    40,
+    startY + 20
+  );
+  doc.text(
+    "     2. This sheet must be handed over to the Chief Superintendent along with Answer Books.",
+    40,
+    startY + 35
+  );
+
+  // 3) Footer Table
+  doc.autoTable({
+    startY: startY + 45,
+    theme: "grid",
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      halign: "center",
+    },
+    bodyStyles: {
+      fontSize: 10,
+      halign: "center",
+      lineWidth: 0.8,
+      textColor: [0, 0, 0],
+    },
+    styles: {
+      font: "helvetica",
+      fontSize: 10,
+      lineColor: [0, 0, 0],
+    },
+    body: [
+      ["S. No", "Name", "Designation & Department", "Signature with Date"],
+      ["", "", "", ""],
+      ["", "", "Chief Superintendent", ""],
+    ],
+  });
+};
+
 
   const generateHallReport = (hall) => {
     // 1) Filter the students for the selected hall & department
@@ -417,17 +421,182 @@ const Reports = () => {
         ],
       ],
       body: tableBody,
-      didDrawPage: (data) => {
-        // data.cursor.y gives the current Y position on the page after drawing the table.
-        addFooterContent(doc, data.cursor.y);
-      },
+   didDrawPage: () => {
+  addFooterContent(doc);
+},
+
       // Reserve space at the bottom of each page for footer content.
-      margin: { bottom: 191 },
+      margin: { bottom: 160 },
     });
 
     // Finally, save the PDF
     doc.save(`${hall.name}_Seating_Report.pdf`);
   };
+
+const generateDepartmentCombinedReport = () => {
+  if (!selectedDepartment) {
+    alert("Please select a department first.");
+    return;
+  }
+
+  const doc = new jsPDF("p", "pt", "a4");
+  let firstPage = true;
+
+  halls.forEach((hall) => {
+    const students =
+      matchedHalls[hall.id]?.filter(
+        (student) => student.department === selectedDepartment
+      ) || [];
+
+    if (students.length === 0) return;
+
+    if (!firstPage) {
+      doc.addPage();
+    }
+    firstPage = false;
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // ===============================
+    // SAME HEADER (Copied from your generateHallReport)
+    // ===============================
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.addImage(bit, 40, 30, 50, 50);
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      "BANNARI  AMMAN  INSTITUTE  OF  TECHNOLOGY",
+      pageWidth / 1.8,
+      45,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(
+      "An Autonomous Institution Affiliated to Anna University Chennai - Approved by AICTE - Accredited by NAAC with 'A+' Grade",
+      pageWidth / 1.8,
+      60,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(
+      "SATHYAMANGALAM  -  638  401          ERODE   DISTRICT             TAMIL    NADU            INDIA",
+      pageWidth / 1.8,
+      75,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(
+      "Ph:   04295-226001 / 221289       Fax:   04295-226668      E-mail:   stayahead@bitsathy.ac.in       Web:   www.bitsathy.ac.in",
+      pageWidth / 1.8,
+      90,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(
+      "OFFICE OF THE CONTROLLER OF EXAMINATIONS",
+      pageWidth / 2,
+      105,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("OPTIONAL TEST - JANUARY 2025", pageWidth / 2, 120, {
+      align: "center",
+    });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("ATTENDANCE SHEET", pageWidth / 2, 140, {
+      align: "center",
+    });
+
+    // ===============================
+    // SHEET DETAILS
+    // ===============================
+    const firstStudent = students[0];
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+
+    doc.text(`Degree & Branch: B.E. ${selectedDepartment}`, 40, 160);
+    doc.text(`Hall No: ${hall.name}`, 480, 160);
+    doc.text(
+      `Course Code & Title : ${firstStudent.original_subject_code || "N/A"}`,
+      40,
+      175
+    );
+    doc.text(
+      `Date & Session : ${firstStudent.date || "N/A"} & ${
+        firstStudent.session || "N/A"
+      }`,
+      395,
+      175
+    );
+    doc.text("Semester : ", 40, 190);
+
+    // ===============================
+    // TABLE
+    // ===============================
+    const tableBody = students.map((student, index) => [
+      index + 1,
+      student.registration_number || "",
+      { content: student.name || "", styles: { halign: "left" } },
+      "",
+      "",
+    ]);
+
+    doc.autoTable({
+      startY: 200,
+      theme: "grid",
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+        lineWidth: 0.5,
+      },
+      bodyStyles: {
+        fontSize: 10,
+        halign: "center",
+        lineWidth: 0.8,
+        textColor: [0, 0, 0],
+      },
+      styles: {
+        font: "helvetica",
+        fontSize: 10,
+        lineColor: [0, 0, 0],
+      },
+      head: [
+        [
+          "S. No",
+          "Register No.",
+          "Name of the Candidate",
+          "Answer Book No.",
+          "Signature of the Candidate",
+        ],
+      ],
+      body: tableBody,
+      didDrawPage: (data) => {
+        addFooterContent(doc, data.cursor.y);
+      },
+      margin: { bottom: 191 },
+    });
+  });
+
+  doc.save(`${selectedDepartment}_All_Venues_Attendance.pdf`);
+};
+
+
 
   return (
     <div className="reports">
@@ -452,53 +621,66 @@ const Reports = () => {
         Download Overall Seating Report
       </button>
 
-      {halls.length > 0 ? (
-        halls.map((hall) => (
-          <div key={hall.id} className="hall-section">
-            <h3>{hall.name}</h3>
-            <button onClick={() => generateHallReport(hall)}>
-              Download {hall.name} Report
-            </button>
+      {selectedDepartment && (
+  <button onClick={generateDepartmentCombinedReport}>
+    Download {selectedDepartment} - All Venues Report
+  </button>
+)}
 
-            {matchedHalls[hall.id]?.length ? (
-              <table className="students-table">
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Student Name</th>
-                    <th>Registration Number</th>
-                    <th>Department</th>
-                    <th>Course Code</th>
-                    <th>Booklet Code</th>
-                    <th>Signature</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {matchedHalls[hall.id]
-                    .filter((student) =>
-                      selectedDepartment ? student.department === selectedDepartment : true
-                    )
-                    .map((student, index) => (
-                      <tr key={student.registration_number}>
-                        <td>{index + 1}</td>
-                        <td>{student.name || "N/A"}</td>
-                        <td>{student.registration_number || "N/A"}</td>
-                        <td>{student.department || "N/A"}</td>
-                        <td>{student.original_subject_code || "N/A"}</td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No students assigned to this hall.</p>
-            )}
-          </div>
-        ))
-      ) : (
-        <p>Loading halls...</p>
-      )}
+
+     {halls.length > 0 ? (
+  halls.map((hall) => {
+    const filteredStudents =
+      matchedHalls[hall.id]?.filter((student) =>
+        selectedDepartment
+          ? student.department === selectedDepartment
+          : true
+      ) || [];
+
+    // ❗ Skip hall if no students match filter
+    if (filteredStudents.length === 0) return null;
+
+    return (
+      <div key={hall.id} className="hall-section">
+        <h3>{hall.name}</h3>
+
+        <button onClick={() => generateHallReport(hall)}>
+          Download {hall.name} Report
+        </button>
+
+        <table className="students-table">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Student Name</th>
+              <th>Registration Number</th>
+              <th>Department</th>
+              <th>Course Code</th>
+              <th>Booklet Code</th>
+              <th>Signature</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredStudents.map((student, index) => (
+              <tr key={student.registration_number}>
+                <td>{index + 1}</td>
+                <td>{student.name || "N/A"}</td>
+                <td>{student.registration_number || "N/A"}</td>
+                <td>{student.department || "N/A"}</td>
+                <td>{student.original_subject_code || "N/A"}</td>
+                <td></td>
+                <td></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  })
+) : (
+  <p>Loading halls...</p>
+)}
+
     </div>
   );
 };

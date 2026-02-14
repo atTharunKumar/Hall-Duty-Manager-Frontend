@@ -1,161 +1,182 @@
-/* AllotSlots.css */
-
-:root {
-  /* Color Palette */
-  --primary-bg: #f9fafb;
-  --form-bg: #ffffff;
-  --border-color: #d1d5db;
-  --input-bg: #f3f4f6;
-  --btn-bg: #3b82f6;
-  --btn-hover: #2563eb;
-  --text-color: #111827;
-  --error-color: #dc2626;
-
-  /* Spacing */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-
-  /* Typography */
-  --font-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  --font-heading: 'Helvetica Neue', Arial, sans-serif;
-}
-
-/* Ensure full viewport coverage */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* Outer container now spans full viewport */
+/* Page container */
 .allot-slots-container {
-  width: 100%;
-  min-height: 100vh;
-  padding: var(--space-lg);
-  background-color: var(--primary-bg);
-  font-family: var(--font-base);
-  color: var(--text-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #f4f6fb;
+  border-radius: 16px;
+  font-family: "Segoe UI", sans-serif;
 }
 
-/* Inner form wrapper with max width and scroll if needed */
+/* Headings */
+.allot-slots-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #1f2937;
+}
+
+.allot-slots-container h3 {
+  margin-top: 40px;
+  color: #374151;
+}
+
+/* Form card */
 .allot-slots-form {
-  width: 100%;
-  max-width: 900px;
-  background: var(--form-bg);
-  padding: var(--space-lg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
 }
 
+/* Form rows */
 .form-row {
   display: flex;
   flex-direction: column;
 }
 
 .form-row label {
-  margin-bottom: var(--space-xs);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-color);
+  margin-bottom: 6px;
+  color: #374151;
 }
 
-.form-row input {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background-color: var(--input-bg);
-  font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-row input:focus {
+/* Inputs */
+.form-row input,
+.form-row select {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
   outline: none;
-  border-color: var(--btn-bg);
-  box-shadow: 0px 0px 5px rgba(59, 130, 246, 0.5);
+  transition: all 0.25s ease;
+  background: #ffffff;
 }
 
-/* Button and error span full width on two-column grid */
-.allot-slots-form .form-row:nth-last-child(1),
-.allot-slots-form .error,
+.form-row input:focus,
+.form-row select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Error text */
+.error {
+  grid-column: 1 / -1;
+  color: #dc2626;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Upload button */
 .upload-slot-button {
   grid-column: 1 / -1;
-}
-
-.error {
-  color: var(--error-color);
-  font-size: 0.95rem;
-  margin: var(--space-sm) 0;
-}
-
-.upload-slot-button {
-  padding: 12px 25px;
-  background-color: var(--btn-bg);
+  padding: 12px;
   border: none;
-  color: #fff;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-  justify-self: start;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .upload-slot-button:hover {
-  background-color: var(--btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
 }
 
-/* Table Styles */
+/* Table */
 .slots-table {
   width: 100%;
-  max-width: 900px;
+  margin-top: 20px;
   border-collapse: collapse;
-  border-radius: 8px;
+  background: #ffffff;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.slots-table thead {
+  background: #4f46e5;
+  color: #ffffff;
 }
 
 .slots-table th,
 .slots-table td {
-  border: 1px solid var(--border-color);
-  padding: 15px;
-  text-align: left;
+  padding: 14px 12px;
+  text-align: center;
+  font-size: 14px;
 }
 
-.slots-table th {
-  background-color: var(--btn-bg);
-  color: #fff;
-  font-weight: 600;
+.slots-table tbody tr:nth-child(even) {
+  background: #f9fafb;
 }
 
-.slots-table tr:nth-child(even) {
-  background-color: #f1f8e9;
+.slots-table tbody tr:hover {
+  background: #eef2ff;
 }
 
-.slots-table tr:hover {
-  background-color: #e0f2f1;
-  transition: background-color 0.3s ease;
+/* No data text */
+.allot-slots-container p {
+  text-align: center;
+  font-weight: 500;
+  color: #6b7280;
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .allot-slots-container {
+    padding: 20px;
+  }
+
   .allot-slots-form {
     grid-template-columns: 1fr;
-    padding: var(--space-md);
   }
-  .upload-slot-button {
-    width: 100%;
-    justify-self: stretch;
-  }
-  .slots-table {
-    font-size: 0.9rem;
-  }
+}
+.info-message {
+  color: #1976d2;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+/* 🔹 Duty Limits Card */
+.duty-card {
+  margin-top: 30px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-left: 5px solid  #1976d2;
+}
+
+.duty-card h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Layout */
+.duty-limits-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+/* Button */
+.save-duty-button {
+  grid-column: span 2;
+  padding: 10px;
+  background:  #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.save-duty-button:hover {
+  background:  #1976d2;
 }

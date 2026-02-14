@@ -5,6 +5,7 @@ import "jspdf-autotable";
 import bit from "./../assets/image.png";
 import "./SeatingArrangement.css";
 
+
 // Precompute neighbor indices for a grid with given rows and cols.
 const computeNeighbors = (rows, cols) => {
   const neighbors = Array(rows * cols).fill(null).map(() => []);
@@ -73,11 +74,14 @@ const canPlaceStudentFullyRelaxed = (grid, index, student, neighbors, cols) => {
 };
 
 const SeatingArrangement = ({ students }) => {
+  const [examName, setExamName] = useState("");
   const [halls, setHalls] = useState([]);
   const [seatingGrids, setSeatingGrids] = useState({});
   const [commonCourseGroups, setCommonCourseGroups] = useState([]);
   const [hallDetails, setHallDetails] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedHall, setSelectedHall] = useState("ALL");
+
 
   // Total number of students (e.g., 1879)
   const totalStudents = students.length;
@@ -233,8 +237,17 @@ const SeatingArrangement = ({ students }) => {
     return grid2D;
   };
 
-  const downloadPDF = (hall) => {
-    const doc = new jsPDF("landscape", "mm", "a3");
+ const downloadPDF = (hall, doc = null) => {
+  const isSingleDownload = !doc;
+
+  if (!doc) {
+    doc = new jsPDF("landscape", "mm", "a3");
+  } else {
+    doc.addPage(); // add new page if reusing
+  }
+
+ 
+
     const pageWidth = doc.internal.pageSize.getWidth();
     // PDF generation code remains similar.
     doc.setFont("helvetica", "normal");
@@ -270,7 +283,13 @@ const SeatingArrangement = ({ students }) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("OFFICE OF THE CONTROLLER OF EXAMINATIONS", pageWidth / 2, 30, { align: "center" });
-    doc.text("OPTIONAL TEST - JANUARY 2025", pageWidth / 2, 35, { align: "center" });
+    doc.text(
+  examName || "EXAMINATION NAME NOT PROVIDED",
+  pageWidth / 2,
+  35,
+  { align: "center" }
+);
+
     doc.text("SEATING ARRANGEMENT", pageWidth / 2, 40, { align: "center" });
     const defaultSession = students[0]?.session || "Session not provided";
     const defaultDate = students[0]?.date || "Date not provided";
@@ -322,16 +341,86 @@ const SeatingArrangement = ({ students }) => {
     doc.text(`For any clarification contact 04295-226357`, pageWidth / 8, 280, { align: "center" });
     doc.text(`Sd/-`, pageWidth / 1.1, 270, { align: "center" });
     doc.text(`Controller of Examinations`, pageWidth / 1.1, 280, { align: "center" });
-    doc.save(`${hall.name}-seating-arrangement.pdf`);
+    if (isSingleDownload) {
+  doc.save(`${hall.name}-seating-arrangement.pdf`);
+}
+
   };
+
+const downloadAllPDFs = () => {
+  const doc = new jsPDF("landscape", "mm", "a3");
+
+  halls.forEach((hall) => {
+    if (
+      seatingGrids[hall.id] &&
+      hallDetails[hall.id] &&
+      hallDetails[hall.id].length > 0
+    ) {
+      downloadPDF(hall, doc);
+    }
+  });
+
+  doc.save("All_Venues_Seating_Arrangement.pdf");
+};
+
+
+
 
   return (
     <div>
       <h2>Seating Arrangement</h2>
+      <div style={{ marginBottom: "15px" }}>
+  <div className="exam-name-container">
+  <label>Examination Name:</label>
+  <input
+    type="text"
+    placeholder="e.g. Internal Test - Feb 2025"
+    value={examName}
+    onChange={(e) => setExamName(e.target.value)}
+  />
+</div>
+
+</div>
+
+<div className="venue-filter-container">
+  <label>Venue:</label>
+  <select
+    value={selectedHall}
+    onChange={(e) => setSelectedHall(e.target.value)}
+  >
+    <option value="ALL">All Venues</option>
+    {halls.map((hall) => (
+      <option key={hall.id} value={hall.id}>
+        {hall.name}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+<button
+  style={{ marginBottom: "20px" }}
+  onClick={downloadAllPDFs}
+>
+  Download All Venues PDF
+</button>
+
       {errorMessage ? (
         <p className="error-message">{errorMessage}</p>
       ) : (
-        halls.map((hall) => (
+      halls
+  .filter((hall) => {
+    const hasStudents =
+      hallDetails[hall.id] && hallDetails[hall.id].length > 0;
+
+    const matchesSelection =
+      selectedHall === "ALL" || hall.id === Number(selectedHall);
+
+    return hasStudents && matchesSelection;
+  })
+
+  .map((hall) => (
+
           <div key={hall.id}>
             <h3>
               {hall.name} (Rows: {hall.ROW_S}, Columns: {hall.COL_s})

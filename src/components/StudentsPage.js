@@ -151,10 +151,11 @@ const StudentsPage = ({ students: propStudents, setStudents: updateStudents }) =
             </label>
           ))}
         </div>
-        <button onClick={saveCommonCourseGroup}>Save Common Course Code</button>
-        <button onClick={clearCommonCourseGroups} style={{ marginLeft: "10px" }}>
-          Clear Common Course Codes
-        </button>
+      <div style={{ display: "flex", gap: "10px" }}>
+  <button onClick={saveCommonCourseGroup}>Save Common Course Code</button>
+  <button onClick={clearCommonCourseGroups}>Clear Common Course Codes</button>
+</div>
+
       </div>
 
       {/* Display Grouped Common Course Codes */}

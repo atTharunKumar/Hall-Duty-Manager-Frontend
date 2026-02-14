@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import './HallManagement.css';
 
 const HallManagement = () => {
@@ -39,7 +38,6 @@ const HallManagement = () => {
 
     try {
       const response = await axios.post('http://localhost:5000/api/halls', hallData);
-      // Here, we are appending the new hall rather than replacing all.
       setHalls([...halls, response.data]);
       setNewHall({ name: '', ROW_S: '', COL_s: '' });
     } catch (error) {
@@ -65,9 +63,7 @@ const HallManagement = () => {
         COL_s: columns,
         capacity
       });
-      setHalls(halls.map(hall =>
-        hall.id === editHallId ? response.data : hall
-      ));
+      setHalls(halls.map(hall => hall.id === editHallId ? response.data : hall));
       setEditHallId(null);
     } catch (error) {
       console.error('Error updating hall:', error);
@@ -80,125 +76,144 @@ const HallManagement = () => {
     setEditData({ name: hall.name, ROW_S: hall.ROW_S, COL_s: hall.COL_s });
   };
 
-  // Handle file input change
   const handleFileChange = (e) => {
     setUploadFile(e.target.files[0]);
   };
 
-  // Process file upload using the new endpoint that replaces hall data
-  const handleFileUpload = async () => {
-    if (!uploadFile) {
-      alert("Please select a file to upload.");
-      return;
-    }
+  // Handle file upload
+const handleFileUpload = async () => {
+  if (!uploadFile) {
+    alert("Please select a file to upload.");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('file', uploadFile);
+  const formData = new FormData();
+  formData.append('file', uploadFile);
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/halls/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+  try {
+    const response = await axios.post('http://localhost:5000/api/halls/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    // response.data can include message or skipped rows info
+    if (response.data.skipped && response.data.skipped.length > 0) {
+      alert(`${response.data.message}\nSkipped rows: ${response.data.skipped.length}`);
+    } else {
       alert(response.data.message);
-      // After a successful upload, re-fetch halls to see the new data
-      fetchHalls();
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      alert("Failed to upload file.");
     }
-  };
+
+    fetchHalls(); // Refresh hall list
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    alert(error.response?.data?.error || "Failed to upload file.");
+  }
+};
+
 
   return (
     <div className="hall-management">
       <h2>Hall Management</h2>
 
-      {/* File Upload Section at the Top */}
-      <div className="upload-section">
-        <h3>Upload Hall Data (XLSX/CSV)</h3>
-        <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileChange} />
-        <button onClick={handleFileUpload}>Upload File</button>
+      {/* Horizontal container for Add Hall and Upload */}
+      <div className="horizontal-container">
+        {/* Add New Hall */}
+        <div className="card add-hall-card">
+          <h3>Add New Hall</h3>
+          <div className="form-row">
+            <input
+              type="text"
+              value={newHall.name}
+              onChange={(e) => setNewHall({ ...newHall, name: e.target.value })}
+              placeholder="Hall Name"
+            />
+            <input
+              type="number"
+              value={newHall.ROW_S}
+              onChange={(e) => setNewHall({ ...newHall, ROW_S: e.target.value })}
+              placeholder="Rows"
+            />
+            <input
+              type="number"
+              value={newHall.COL_s}
+              onChange={(e) => setNewHall({ ...newHall, COL_s: e.target.value })}
+              placeholder="Columns"
+            />
+            <button className="primary-btn" onClick={addHall}>
+              Add Hall
+            </button>
+          </div>
+        </div>
+
+        {/* Upload Section */}
+        <div className="card upload-card">
+          <h3>Upload Hall Data (XLSX/CSV)</h3>
+          <div className="form-row">
+            <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileChange} />
+            <button className="secondary-btn" onClick={handleFileUpload}>Upload File</button>
+          </div>
+        </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Hall Name</th>
-            <th>Rows</th>
-            <th>Columns</th>
-            <th>Capacity</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {halls.map(hall => (
-            <tr key={hall.id}>
-              {editHallId === hall.id ? (
-                <>
-                  <td>
-                    <input
-                      type="text"
-                      value={editData.name}
-                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={editData.ROW_S}
-                      onChange={(e) => setEditData({ ...editData, ROW_S: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={editData.COL_s}
-                      onChange={(e) => setEditData({ ...editData, COL_s: e.target.value })}
-                    />
-                  </td>
-                  <td>{calculateCapacity(editData.ROW_S, editData.COL_s)}</td>
-                  <td>
-                    <button onClick={updateHall}>Save</button>
-                    <button onClick={() => setEditHallId(null)}>Cancel</button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td>{hall.name}</td>
-                  <td>{hall.ROW_S}</td>
-                  <td>{hall.COL_s}</td>
-                  <td>{hall.capacity}</td>
-                  <td>
-                    <button onClick={() => handleEditClick(hall)}>Edit</button>
-                  </td>
-                </>
-              )}
+      {/* Hall Table */}
+      <div className="card table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Hall Name</th>
+              <th>Rows</th>
+              <th>Columns</th>
+              <th>Capacity</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3>Add New Hall</h3>
-      <input
-        type="text"
-        value={newHall.name}
-        onChange={(e) => setNewHall({ ...newHall, name: e.target.value })}
-        placeholder="Name"
-      />
-      <input
-        type="number"
-        value={newHall.ROW_S}
-        onChange={(e) => setNewHall({ ...newHall, ROW_S: e.target.value })}
-        placeholder="Rows"
-      />
-      <input
-        type="number"
-        value={newHall.COL_s}
-        onChange={(e) => setNewHall({ ...newHall, COL_s: e.target.value })}
-        placeholder="Columns"
-      />
-      <button onClick={addHall}>Add Hall</button>
+          </thead>
+          <tbody>
+            {halls.map(hall => (
+              <tr key={hall.id}>
+                {editHallId === hall.id ? (
+                  <>
+                    <td>
+                      <input
+                        type="text"
+                        value={editData.name}
+                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={editData.ROW_S}
+                        onChange={(e) => setEditData({ ...editData, ROW_S: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={editData.COL_s}
+                        onChange={(e) => setEditData({ ...editData, COL_s: e.target.value })}
+                      />
+                    </td>
+                    <td>{calculateCapacity(editData.ROW_S, editData.COL_s)}</td>
+                    <td>
+                      <button className="save-btn" onClick={updateHall}>Save</button>
+                      <button className="cancel-btn" onClick={() => setEditHallId(null)}>Cancel</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>{hall.name}</td>
+                    <td>{hall.ROW_S}</td>
+                    <td>{hall.COL_s}</td>
+                    <td>{hall.capacity}</td>
+                    <td>
+                      <button className="edit-btn" onClick={() => handleEditClick(hall)}>Edit</button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
